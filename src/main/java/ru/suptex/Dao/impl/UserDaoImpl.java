@@ -1,0 +1,110 @@
+package ru.suptex.Dao.impl;
+
+import ru.suptex.Dao.Dao;
+import ru.suptex.model.User;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+public class UserDaoImpl implements Dao<User, Long> {
+
+    private final Connection connection;
+
+    public UserDaoImpl (Connection connection) {
+        this.connection = connection;
+    }
+
+    @Override
+    public User findById(Long id) {
+        String query = "SELECT * FROM users WHERE id=?";
+        User user = null;
+        try {
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setLong(1, id);
+
+            ResultSet resultSet = statement.executeQuery();
+
+            while (resultSet.next()) {
+                user = new User(
+                        resultSet.getInt("id"),
+                        resultSet.getString("first_name"),
+                        resultSet.getString("last_name")
+                );
+            }
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        return user;
+    }
+
+    @Override
+    public List<User> findAll() {
+        List<User> users = new ArrayList<>();
+        String query = "SELECT * FROM users";
+        try{
+            PreparedStatement statement = connection.prepareStatement(query);
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                users.add(
+                        new User(
+                                resultSet.getInt("id"),
+                                resultSet.getString("first_name"),
+                                resultSet.getString("last_name")
+                        )
+                );
+            }
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        return users;
+    }
+
+    @Override
+    public void save(User user) {
+        String save = "INSERT INTO users (first_name, last_name) VALUES (?, ?)";
+        try {
+            PreparedStatement statement = connection.prepareStatement(save);
+            statement.setString(1, user.getFirstName());
+            statement.setString(2, user.getLastName());
+            int result = statement.executeUpdate();
+            System.out.println(result == 1 ? "Save success" : "Save failed" );
+
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+
+    }
+
+    @Override
+    public void update(User user) {
+        String update = "UPDATE users SET first_name=?, last_name=? WHERE id=?";
+        try{
+            PreparedStatement statement = connection.prepareStatement(update);
+            statement.setString(1, user.getFirstName());
+            statement.setString(2, user.getLastName());
+            statement.setLong(3, user.getId());
+            int result = statement.executeUpdate();
+            System.out.println(result == 1 ? "Update success" : "Update failed");
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+
+    }
+
+    @Override
+    public void delete(Long aLong) {
+        String delete = "DELETE FROM users WHERE id=?";
+        try {
+            PreparedStatement statement = connection.prepareStatement(delete);
+            statement.setLong(1, aLong);
+            int result = statement.executeUpdate();
+            System.out.println(result == 1 ? "Delete success" : "Delete failed");
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+    }
+}
